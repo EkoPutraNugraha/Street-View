@@ -1,97 +1,65 @@
 # Street View
-<b>Lightweight RTSP client library for Android</b> with almost zero lag video display. Designed for lag criticial applications (e.g. video surveillance from drones).
 
-Unlike [ExoPlayer](https://github.com/google/ExoPlayer) which also supports RTSP, this library does not make any video buffering. Video frames are shown immidiately when they arrive.
+Street View adalah aplikasi Android untuk memantau kamera lokal dan kamera RTSP secara langsung. Aplikasi ini dilengkapi tampilan peta, tombol lokasi, riwayat snapshot, dan menu kamera sederhana untuk berpindah antara kamera perangkat dan streaming RTSP.
 
-[![Release](https://jitpack.io/v/alexeyvasilyev/rtsp-client-android.svg)](https://jitpack.io/#alexeyvasilyev/rtsp-client-android)
+## Preview UI
 
-![Screenshot](docs/images/rtsp-demo-app.png?raw=true "Screenshot")
+| Main Screen | Camera Menu |
+| --- | --- |
+| <img src="docs/images/activity_main.png" width="260" alt="Street View main screen"> | <img src="docs/images/activity_camera_menu.png" width="260" alt="Street View camera menu"> |
 
-## Features:
-- Android min API 24.
-- RTSP/RTSPS over TCP.
-- Video H.264 only.
-- Audio AAC LC only.
-- Basic/Digest authentification.
-- Supports majority of RTSP IP cameras.
+## Fitur Utama
 
+- Live streaming kamera RTSP.
+- Kamera lokal dari perangkat Android.
+- Tampilan peta dengan dukungan lokasi pengguna.
+- Tombol cepat untuk kembali ke posisi lokasi.
+- Riwayat foto atau snapshot.
+- Bottom navigation untuk akses Camera, Riwayat, dan Back.
 
-## Permissions:
+## Teknologi
+
+- Kotlin dan Java
+- Android SDK
+- Mapbox Maps
+- RTSP client library
+- Room database
+- Material Bottom Navigation
+
+## Struktur Aplikasi
+
+- `MainActivity` menampilkan peta, lokasi, bottom navigation, dan fragment utama.
+- `CameraMenuActivity` menampilkan pilihan kamera lokal atau kamera RTSP.
+- `LiveFragment` menangani streaming RTSP.
+- `LocalCameraFragment` menangani kamera perangkat.
+- `HistoryFragment` menampilkan riwayat snapshot.
+
+## Catatan Konfigurasi
+
+Project ini membutuhkan token Mapbox agar peta dan dependency Mapbox dapat berjalan saat build.
+
+Tambahkan token secara lokal melalui environment variable atau Gradle property:
+
+```bash
+MAPBOX_DOWNLOADS_TOKEN=your_mapbox_downloads_token
+```
+
+Lalu isi access token runtime Mapbox di resource lokal sesuai kebutuhan:
 
 ```xml
-<uses-permission android:name="android.permission.INTERNET" />
+<string name="mapbox_access_token">your_mapbox_access_token</string>
 ```
 
-## Compile
+Token sengaja tidak disimpan di repository agar aman.
 
-To use this library in your project add this to your build.gradle:
-```gradle
-allprojects {
-  repositories {
-    maven { url 'https://jitpack.io' }
-  }
-}
-dependencies {
-  implementation 'com.github.alexeyvasilyev:rtsp-client-android:x.x.x'
-}
-```
+## Menjalankan Project
 
-## How to use:
-Easiest way is just to use `RtspSurfaceView` class for showing video stream in UI.
-```xml
-<com.alexvas.rtsp.widget.RtspSurfaceView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/svVideo" />
-```
+1. Clone repository ini.
+2. Buka project di Android Studio.
+3. Tambahkan token Mapbox lokal.
+4. Sync Gradle.
+5. Jalankan aplikasi ke emulator atau perangkat Android.
 
-Then in code use:
-```kotlin
-val uri = Uri.parse("rtsps://10.0.1.3/test.sdp")
-val username = "admin"
-val password = "secret"
-svVideo.init(uri, username, password)
-svVideo.start(requestVideo = true, requestAudio = true)
-// ...
-svVideo.stop()
-```
+## Repository
 
-You can still use library without any decoding (just for obtaining raw frames), e.g. for writing video stream into MP4 via muxer.
-
-```kotlin
-val rtspClientListener = object: RtspClient.RtspClientListener {
-    override fun onRtspConnecting() {}
-    override fun onRtspConnected(sdpInfo: SdpInfo) {}
-    override fun onRtspVideoNalUnitReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
-        // Send raw H264/H265 NAL unit to decoder
-    }
-    override fun onRtspAudioSampleReceived(data: ByteArray, offset: Int, length: Int, timestamp: Long) {
-        // Send raw audio to decoder
-    }
-    override fun onRtspDisconnected() {}
-    override fun onRtspFailedUnauthorized() {
-        Log.e(TAG, "RTSP failed unauthorized");
-    }
-    override fun onRtspFailed(message: String?) {
-        Log.e(TAG, "RTSP failed with message '$message'")
-    }
-}
-
-val uri = Uri.parse("rtsps://10.0.1.3/test.sdp")
-val username = "admin"
-val password = "secret"
-val stopped = new AtomicBoolean(false)
-val sslSocket = NetUtils.createSslSocketAndConnect(uri.getHost(), uri.getPort(), 10000)
-
-val rtspClient = RtspClient.Builder(sslSocket, uri.toString(), stopped, rtspClientListener)
-    .requestVideo(true)
-    .requestAudio(true)
-    .withDebug(false)
-    .withUserAgent("RTSP client")
-    .withCredentials(username, password)
-    .build()
-// Blocking call until stopped variable is true or connection failed
-rtspClient.execute()
-
-NetUtils.closeSocket(sslSocket)
-```
+Project ini dibuat sebagai aplikasi pemantauan kamera sederhana dengan fokus pada live camera, RTSP streaming, peta lokasi, dan riwayat snapshot.
